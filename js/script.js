@@ -1,10 +1,46 @@
 // Store conversation history for OpenAI API
-let conversationHistory = [
-    {
-        role: 'system',
-        content: 'You are a helpful assistant for a vacation rental website. Help users find the perfect rental for their needs.'
+let conversationHistory = [];
+
+// Store rentals data
+let rentalsData = [];
+
+// Load rentals data from JSON file
+async function loadRentalsData() {
+    try {
+        const response = await fetch('./rentals.json');
+        const data = await response.json();
+        rentalsData = data.rentals;
+        
+        // Initialize conversation with system message that includes rentals data
+        conversationHistory = [
+            {
+                role: 'system',
+                content: `You are a helpful assistant for a vacation rental website. Help users find the perfect rental for their needs. 
+
+Here are the available vacation rentals:
+
+${rentalsData.map(rental => `
+**${rental.name}**
+- Location: ${rental.location}
+- Description: ${rental.description}
+- Rating: ${rental.avgRating}/5 stars
+- Available: ${rental.availabilityDates.start} to ${rental.availabilityDates.end}
+`).join('\n')}
+
+When users ask about rentals, recommend specific properties from this list that match their preferences. Be conversational and helpful!`
+            }
+        ];
+    } catch (error) {
+        console.error('Error loading rentals data:', error);
+        // Fallback system message if rentals can't be loaded
+        conversationHistory = [
+            {
+                role: 'system',
+                content: 'You are a helpful assistant for a vacation rental website. Help users find the perfect rental for their needs.'
+            }
+        ];
     }
-];
+}
 
 // Main function to initialize the chat interface
 function initChat() {
@@ -110,5 +146,13 @@ function initChat() {
     document.getElementById('chatForm').addEventListener('submit', handleUserInput);
 }
 
-// Initialize the chat interface
-initChat();
+// Initialize the application
+async function init() {
+    // Load rentals data first
+    await loadRentalsData();
+    // Then initialize the chat interface
+    initChat();
+}
+
+// Start the application
+init();
