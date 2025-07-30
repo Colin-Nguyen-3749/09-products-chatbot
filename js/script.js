@@ -37,6 +37,13 @@ CONVERSATION FLOW:
 
 3. Explain WHY each rental matches what they're looking for.
 
+FORMATTING INSTRUCTIONS:
+- Use line breaks to separate different thoughts or sections
+- Use bullet points (•) or dashes (-) for lists
+- Keep paragraphs short and easy to read
+- Put rental names in bold when recommending them
+- Use emojis sparingly to add personality
+
 Keep your tone conversational, friendly, and helpful. Ask one question at a time to make it easy for users to respond.`
             }
         ];
@@ -96,7 +103,7 @@ function initChat() {
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
-                // Send conversation to OpenAI API
+                // Send conversation to OpenAI API with adjusted parameters for better conversation
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -106,8 +113,10 @@ function initChat() {
                     body: JSON.stringify({
                         model: 'gpt-4o',
                         messages: conversationHistory,
-                        max_tokens: 500,
-                        temperature: 0.7
+                        max_tokens: 600, // Increased for more detailed responses
+                        temperature: 0.8, // Slightly higher for more natural conversation
+                        presence_penalty: 0.1, // Encourage varied language
+                        frequency_penalty: 0.1 // Reduce repetition
                     })
                 });
 
@@ -123,10 +132,17 @@ function initChat() {
                 // Remove typing indicator
                 chatMessages.removeChild(typingIndicator);
 
-                // Display the AI's response
+                // Display the AI's response with proper formatting
                 const botMessage = document.createElement('div');
                 botMessage.classList.add('message', 'bot');
-                botMessage.textContent = aiMessage;
+                
+                // Convert line breaks to HTML and preserve formatting
+                const formattedMessage = aiMessage
+                    .replace(/\n\n/g, '<br><br>') // Double line breaks become paragraph breaks
+                    .replace(/\n/g, '<br>') // Single line breaks become line breaks
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold text formatting
+                
+                botMessage.innerHTML = formattedMessage;
                 chatMessages.appendChild(botMessage);
 
                 // Add AI response to conversation history
